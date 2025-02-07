@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Team List</title>
+  </head>
+  <body>
+    <h1>NBA Teams</h1>
+    <ul>
+      {% for team in teams %}
+      <li>
+        <a href="{% url 'team_profile' team.id %}">
+          <img
+            src="{{ team.image }}"
+            alt="{{ team.name }} logo"
+            style="width: 30px; height: 30px; margin-right: 10px"
+          />
+          {{ team.name }}
+        </a>
+      </li>
+      <!-- If using a database -->
+      <!-- <li>{{ team }}</li> -->
+      <!-- If using a hardcoded list -->
+      {% endfor %}
+    </ul>
+  </body>
+</html>

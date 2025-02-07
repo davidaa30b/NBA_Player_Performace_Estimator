@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    
+    <title>{{ team.name }}</title>
+    <script>
+      document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const season = params.get('season');
+
+        if (season ) {
+            document.getElementById('full-season-gamelog-heading').innerText = `Full Season Game Log ${season} season `;
+        }
+       });
+      function filterBySeason() {
+        var dropdown = document.getElementById("season-dropdown");
+        var selectedValue = dropdown.value; 
+        
+        var [year, team] = selectedValue.split("|");
+        document.getElementById('full-season-gamelog-heading').innerText  = `Full Season Game Log ${year} season`
+        window.location.href = "?season=" + encodeURIComponent(year) ;
+      }
+    </script>
+  </head>
+  <body>
+    <h1>{{ team.name }}</h1>
+    <img src="{{ team.image }}" alt="Team Image" />
+    <h2>Roster</h2>
+    <div>
+      <ul>
+        {% for player in players %}
+        <li>
+          <a
+            href="{% url 'player_profile' team_id=team.id player_id=player.id %}"
+            >{{ player.name }}</a
+          >
+        </li>
+        {% empty %}
+        <p>No players found for this team.</p>
+        {% endfor %}
+      </ul>
+    </div>
+
+
+
+
+    <h2>Season Averages</h2>
+    <h3>General Stats</h3>
+    <div id="season-avg-table-gen-stats">
+      <table>
+        <tr>
+          <th>Season</th>
+          <th>Field Goals</th>
+          <th>Field Goals Attempted</th>
+          <th>Field Goal Percentage</th>
+          <th>Three Pointers</th>
+          <th>Three Pointers Attempted</th>
+          <th>Three Pointers Percentage</th>
+          <th>Free Throws</th>
+          <th>Free Throws Attempted</th>
+          <th>Free Throw Percentage</th>
+          <th>Offensive Rebounds</th>
+          <th>Assists</th>
+          <th>Steals</th>
+          <th>Blocks</th>
+          <th>Turnovers</th>
+          <th>Personal Fouls</th>
+        </tr>
+        {% for season,stats in general_stats_logs_avg.items %}
+        <tr>
+          <td>{{ season }}</td>
+          <td>{{stats.team_field_goals|floatformat:3}}</td>
+          <td>{{stats.team_field_goals_attempted|floatformat:3}}</td>
+          <td>{{ stats.team_field_goal_percentage|floatformat:3}}</td>
+          <td>{{ stats.team_three_pointers|floatformat:3 }}</td>
+          <td>{{ stats.team_three_pointers_attempted|floatformat:3 }}</td>
+          <td>{{ stats.team_three_pointers_percentage|floatformat:3}}</td>
+          <td>{{ stats.team_free_throws|floatformat:3 }}</td>
+          <td>{{ stats.team_free_throws_attempted|floatformat:3 }}</td>
+          <td>{{ stats.team_free_throw_percentage|floatformat:3 }}</td>
+          <td>{{ stats.team_offensive_rebounds|floatformat:3 }}</td>
+          <td>{{ stats.team_assists|floatformat:3 }}</td>
+          <td>{{ stats.team_steals|floatformat:3 }}</td>
+          <td>{{ stats.team_blocks|floatformat:3 }}</td>
+          <td>{{ stats.team_turnovers|floatformat:3 }}</td>
+          <td>{{ stats.team_personal_fouls|floatformat:3 }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+    <h3>Advanced Stats</h3>
+    <div id="season-avg-table-gen-stats">
+      <table>
+        <tr>
+          <th>Season</th>
+          <th>Offensive Rating</th>
+          <th>Defensive Rating</th>
+          <th>Pace</th>
+          <th>FT Att. Rate</th>
+          <th>3P. Att. Rate</th>
+          <th>True Shooting %</th>
+          <th>Total Reb. %</th>
+          <th>Assist %</th>
+          <th>Steal %</th>
+          <th>Block %</th>
+          <th>Off. Effective FG %</th>
+          <th>Off. TO. %</th>
+          <th>Off. Reb. %</th>
+          <th>Off. FT per FG %</th>
+          <th>Def. Effective FG %</th>
+          <th>Def. TO. %</th>
+          <th>Def. Reb. %</th>
+          <th>Def. FT per FG Att. %</th>
+        </tr>
+        {% for season,stats in advanced_stats_logs_avg.items %}
+        <tr>
+          <td>{{ season }}</td>
+          <td>{{stats.offensive_rating|floatformat:3}}</td>
+          <td>{{stats.defensive_rating|floatformat:3}}</td>
+          <td>{{ stats.pace|floatformat:3}}</td>
+          <td>{{ stats.free_throw_attempt_rate|floatformat:3 }}</td>
+          <td>{{ stats.three_point_attempt_rate|floatformat:3 }}</td>
+          <td>{{ stats.true_shooting_percentage|floatformat:3}}</td>
+          <td>{{ stats.total_reboound_percentage|floatformat:3 }}</td>
+          <td>{{ stats.assist_percentage|floatformat:3 }}</td>
+          <td>{{ stats.steal_percentage|floatformat:3 }}</td>
+          <td>{{ stats.block_percentage|floatformat:3 }}</td>
+          <td>
+            {{ stats.offensive_effective_field_goal_percentage|floatformat:3 }}
+          </td>
+          <td>{{ stats.offensive_turnover_percentage|floatformat:3 }}</td>
+          <td>{{ stats.offensive_rebound_percentage|floatformat:3 }}</td>
+          <td>
+            {{stats.offensive_free_throws_per_field_goal_attempt_percentage|floatformat:3}}
+          </td>
+          <td>
+            {{ stats.defensive_effective_field_goal_percentage|floatformat:3 }}
+          </td>
+          <td>{{ stats.defensive_turnover_percentage|floatformat:3 }}</td>
+          <td>{{ stats.defensive_rebound_percentage|floatformat:3 }}</td>
+          <td>
+            {{stats.defensive_free_throws_per_field_goal_attempt_percentage|floatformat:3}}
+          </td>
+        </tr>
+        {% endfor %}
+      </table>
+    </div>
+
+    <h2 id="full-season-gamelog-heading">Full Season Game Log 2025 season</h2>
+    <label for="season-dropdown">Select Season:</label>
+    <select id="season-dropdown" onchange="filterBySeason()">
+      <option>Select season</option>
+      {% for season in seasons_years %}
+          <option value="{{ season }}" 
+              {% if season == selected_year %}selected{% endif %}>
+              {{ season }} 
+          </option>
+      {% endfor %}
+    </select>
+  
+
+    <h3>General Stats</h3>
+    <div id="full-season-table-gen-stats" >
+      <table>
+        <thead>
+            <tr>
+                <th>Game</th> 
+                <th>Date</th> 
+                <th>Location</th> 
+                <th>Opp</th> 
+                <th>W/L</th> 
+                <th>Points</th> 
+                <th>Opp points</th> 
+                <th>FGs</th> 
+                <th>FGs Att.</th>
+                <th>FG %</th>
+                <th>3Ps</th>
+                <th>3P Att.</th>
+                <th>3P %</th>
+                <th>FTs</th>
+                <th>FTs Att.</th>
+                <th>FT %</th>
+                <th>Off. Reb.</th>
+                <th>Total Reb.</th>
+                <th>Assists</th>
+                <th>Steals</th>
+                <th>Blocks</th>
+                <th>TOs</th>
+                <th>PFs</th>
+                <th>Opp. FGs</th>
+                <th>Opp. FGs Att.</th>
+                <th>Opp. FG %</th>
+                <th>Opp. 3Ps</th>
+                <th>Opp. 3P Att.</th>
+                <th>Opp. 3P %</th>
+                <th>Opp. FTs</th>
+                <th>Opp. FTs Att.</th>
+                <th>Opp. FT %</th>
+                <th>Opp. Off. Reb.</th>
+                <th>Opp. Total Reb.</th>
+                <th>Opp. Assists</th>
+                <th>Opp. Steals</th>
+                <th>Opp. Blocks</th>
+                <th>Opp. TOs</th>
+                <th>Opp. PFs</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for stats in full_season_general %}
+            <tr>
+                <td>{{stats.rank}}</td>
+                <td>{{stats.date}}</td>
+                <td>{% if stats.location %}Home{% else %} Away {% endif %}</td>
+                <td>{{stats.opponent}}</td>
+                <td>{{stats.win_loss_result}}</td>
+                <td>{{stats.team_points}}</td>
+                <td>{{stats.opponents_points}}</td>
+                <td>{{ stats.team_field_goals }}</td>
+                <td>{{ stats.team_field_goals_attempted }}</td>
+                <td>{{ stats.team_field_goal_percentage }}</td>
+                <td>{{ stats.team_three_pointers }}</td>
+                <td>{{ stats.team_three_pointers_attempted }}</td>
+                <td>{{ stats.team_three_pointers_percentage }}</td>
+                <td>{{ stats.team_free_throws }}</td>
+                <td>{{ stats.team_free_throws_attempted }}</td>
+                <td>{{ stats.team_free_throw_percentage }}</td>
+                <td>{{ stats.team_offensive_rebounds }}</td>
+                <td>{{ stats.team_total_rebounds }}</td>
+                <td>{{ stats.team_assists }}</td>
+                <td>{{ stats.team_steals }}</td>
+                <td>{{ stats.team_blocks }}</td>
+                <td>{{ stats.team_turnovers }}</td>
+                <td>{{ stats.team_personal_fouls }}</td>
+                <td>{{ stats.opponent_field_goals }}</td>
+                <td>{{ stats.opponent_field_goals_attempted }}</td>
+                <td>{{ stats.opponent_field_goal_percentage }}</td>
+                <td>{{ stats.opponent_three_pointers }}</td>
+                <td>{{ stats.opponent_three_pointers_attempted }}</td>
+                <td>{{ stats.opponent_three_pointers_percentage }}</td>
+                <td>{{ stats.opponent_free_throws }}</td>
+                <td>{{ stats.opponent_free_throws_attempted }}</td>
+                <td>{{ stats.opponent_free_throw_percentage }}</td>
+                <td>{{ stats.opponent_offensive_rebounds }}</td>
+                <td>{{ stats.opponent_total_rebounds }}</td>
+                <td>{{ stats.opponent_assists }}</td>
+                <td>{{ stats.opponent_steals }}</td>
+                <td>{{ stats.opponent_blocks }}</td>
+                <td>{{ stats.opponent_turnovers }}</td>
+                <td>{{ stats.opponent_personal_fouls }}</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+    </div>
+    <h3>Advanced Stats</h3>
+    <div id="full-season-table-adv-stats" >
+      <table>
+        <thead>
+          <tr>
+              <th>Game</th>
+              <th>Date</th>
+              <th>Opp</th>
+              <th>Offensive Rating</th>
+              <th>Defensive Rating</th>
+              <th>Pace</th>
+              <th>FT Att. Rate</th>
+              <th>3P. Att. Rate</th>
+              <th>True Shooting %</th>
+              <th>Total Reb. %</th>
+              <th>Assist %</th>
+              <th>Steal %</th>
+              <th>Block %</th>
+              <th>Off. Effective FG %</th>
+              <th>Off. TO. %</th>
+              <th>Off. Reb. %</th>
+              <th>Off. FT per FG %</th>
+              <th>Def. Effective FG %</th>
+              <th>Def. TO. %</th>
+              <th>Def. Reb. %</th>
+              <th>Def. FT per FG Att. %</th>
+          </tr>
+      </thead>
+     
+        {% for game in full_season_advanced %}
+        <tr>
+          <td>{{game.number}}</td>
+          <td>{{ game.date }}</td>
+          <td>{{ game.opponent }}</td>
+          <td>{{ game.offensive_rating }}</td>
+          <td>{{ game.defensive_rating }}</td>
+          <td>{{ game.pace }}</td>
+          <td>{{ game.free_throw_attempt_rate }}</td>
+          <td>{{ game.three_point_attempt_rate }}</td>
+          <td>{{ game.true_shooting_percentage }}</td>
+          <td>{{ game.total_reboound_percentage }}</td>
+          <td>{{ game.assist_percentage }}</td>
+          <td>{{ game.steal_percentage }}</td>
+          <td>{{ game.block_percentage }}</td>
+          <td>{{ game.offensive_effective_field_goal_percentage }}</td>
+          <td>{{ game.offensive_turnover_percentage }}</td>
+          <td>{{ game.offensive_rebound_percentage }}</td>
+          <td>{{ game.offensive_free_throws_per_field_goal_attempt_percentage }}</td>
+          <td>{{ game.defensive_effective_field_goal_percentage }}</td>
+          <td>{{ game.defensive_turnover_percentage }}</td>
+          <td>{{ game.defensive_rebound_percentage }}</td>
+          <td>{{ game.defensive_free_throws_per_field_goal_attempt_percentage }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+  </body>
+</html>

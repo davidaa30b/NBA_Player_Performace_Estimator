@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ player.name }} - Profile</title>
+    <script>
+      function animateLoadingDots() {
+          let loadingText = document.getElementById("loading-text");
+          let dotCount = 0;
+          let maxDots = 3;
+          
+          setInterval(() => {
+              dotCount = (dotCount % maxDots) + 1; // This will loop between 1 and 3
+              loadingText.innerHTML = `Loading ${'.'.repeat(dotCount)}`;
+          }, 500);  // Update every 500ms
+      }
+
+      function filterBySeason() {
+        var dropdown = document.getElementById("season-dropdown");
+        var selectedValue = dropdown.value; 
+        
+        var [year, team] = selectedValue.split("|");
+        document.getElementById('full-season-gamelog-heading').innerText  = `Full Season Game Log ${year} season ${team}`
+        window.location.href = "?season=" + encodeURIComponent(year) + "&team=" + encodeURIComponent(team);
+      }
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const params = new URLSearchParams(window.location.search);
+        const season = params.get('season');
+        const team = params.get('team');
+
+        if (season && team) {
+            document.getElementById('full-season-gamelog-heading').innerText = `Full Season Game Log ${season} season ${team}`;
+        }
+    });
+    function predictPlayerStats(starts) {
+            const playerId = "{{ player.id }}";  
+            const url = `/predict_stats/${playerId}/?starts=${starts}`;
+            let statsDiv = document.getElementById("predicted-stats");
+            statsDiv.innerHTML = "<h3 id='loading-text'>Loading ...</h3>";
+            animateLoadingDots();
+
+            fetch(url)
+                .then(response => response.json())
+                .then(data => {
+                    statsDiv.innerHTML = "<h3>Predicted Stats:</h3>";
+                    statsDiv.innerHTML += `<p><strong>Date:</strong> ${data.stats['Points'].date}
+                      <strong>Location:</strong> ${data.stats['Points'].location ? 'Home' : 'Away'}
+                      <strong>Opponent:</strong> ${data.stats['Points'].opponent}</p>`;
+                    for (let stat in data.stats) {
+                        console.log(stat)
+                        console.log(data.stats[stat])
+                        statsDiv.innerHTML += `<p><strong>${stat}:</strong> ${parseFloat(data.stats[stat].prediction).toFixed(2)}</p>`;
+                    }
+                })
+                .catch(error => console.error("Error fetching stats:", error));
+        }
+    </script>
+  </head>
+  <body>
+    <h1>Player Profile - {{ player.name }}</h1>
+    <img src="{{ player.image }}" alt="Player Image" />
+    <h2>Predict Next Game Stats</h2>
+    <button onclick="predictPlayerStats(true)">Predict as Starter</button>
+    <button onclick="predictPlayerStats(false)">Predict as Bench</button>
+
+    <div id="predicted-stats"></div> 
+    <p>Want to estimate player stats for other games or seasons? <a href="{% url 'player_estimator' team_id=team.id player_id=player.id %}">Go to Player Estimator</a></p>
+
+    <h2>Next 5 Games</h2>
+    <table>
+      <tr>
+        <th>Date</th>
+        <th>Opponent</th>
+        <th>Location</th>
+      </tr>
+      {% for game in next_5_games %}
+      <tr>
+        <td>{{ game.date }}</td>
+        <td>{{ game.opponent }}</td>
+        <td>{% if game.location %}Home{% else %}Away{% endif %}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h2>Season Averages</h2>
+    <h3>General Stats</h3>
+    <table>
+      <tr>
+        <th>Team</th>
+        <th>Season</th>
+        <th>Games Played</th>
+        <th>Games Started</th>
+        <th>Minutes</th>
+        <th>Points</th>
+        <th>Field Goal Percentage</th>
+        <th>Three Point Percentage</th>
+        <th>Free Throw Percentage</th>
+        <th>Assists</th>
+        <th>Offensive Rebounds</th>
+        <th>Defensive Rebounds</th>
+        <th>Total Rebounds</th>
+        <th>Steals</th>
+        <th>Blocks</th>
+        <th>Turnovers</th>
+        <th>Personal Fouls</th>
+        <th>Plus Minus</th>
+        <th>Game Score</th>
+      </tr>
+      {% for key,stats in career_averages_gen_stats.items %}
+      <tr>
+        <td>{{ key.0 }}</td>
+        <td>{{ key.1 }}</td>
+        <td>{{stats.games_played}}</td>
+        <td>{{stats.games_started}}</td>
+        <td>{{ stats.avg_minutes}}</td>
+        <td>{{ stats.avg_points|floatformat:1 }}</td>
+        <td>{{ stats.avg_field_goal_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_three_pointers_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_free_throw_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_assists|floatformat:3 }}</td>
+        <td>{{ stats.avg_offensive_rebounds|floatformat:3 }}</td>
+        <td>{{ stats.avg_defensive_rebounds|floatformat:3 }}</td>
+        <td>{{ stats.avg_rebounds|floatformat:3 }}</td>
+        <td>{{ stats.avg_steals|floatformat:3 }}</td>
+        <td>{{ stats.avg_blocks|floatformat:3 }}</td>
+        <td>{{ stats.avg_turnovers|floatformat:3 }}</td>
+        <td>{{ stats.avg_personal_fouls|floatformat:3 }}</td>
+        <td>{{ stats.avg_plus_minus|floatformat:3 }}</td>
+        <td>{{ stats.avg_game_score|floatformat:3 }}</td>
+      </tr>
+      {% endfor %}
+    </table>
+    <h3>Advanced Stats</h3>
+    <table>
+      <tr>
+        <th>Team</th>
+        <th>Season</th>
+        <th>Games Played</th>
+        <th>Games Started</th>
+        <th>Minutes</th>
+        <th>True Shooting Percentage</th>
+        <th>Effective Field Goal Percentage</th>
+        <th>Assist Percentage</th>
+        <th>Offensive Rebound Percentage</th>
+        <th>Defensive Rebound Percentage</th>
+        <th>Total Rebound Percentage</th>
+        <th>Steal Percentage</th>
+        <th>Block Percentage</th>
+        <th>Turnover Percentage</th>
+        <th>Usage Rate</th>
+        <th>Offensive Rating</th>
+        <th>Defensive Rating</th>
+      </tr>
+      {% for key,stats in career_averages_adv_stats.items %}
+      <tr>
+        <td>{{ key.0 }}</td>
+        <td>{{ key.1 }}</td>
+        <td>{{stats.games_played}}</td>
+        <td>{{stats.games_started}}</td>
+        <td>{{ stats.avg_minutes}}</td>
+        <td>{{ stats.avg_true_shooting_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_effective_field_goal_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_assist_percentage|floatformat:3}}</td>
+        <td>{{ stats.avg_offensive_rebound_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_defensive_rebound_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_total_rebound_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_steal_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_block_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_turnover_percentage|floatformat:3 }}</td>
+        <td>{{ stats.avg_usage_rate|floatformat:3 }}</td>
+        <td>{{ stats.avg_offensive_rating|floatformat:3 }}</td>
+        <td>{{ stats.avg_defensive_rating|floatformat:3 }}</td>
+     
+      </tr>
+      {% endfor %}
+    </table>
+
+    <!-- Last 5 Games-->
+    <h2>Last 5 Games</h2>
+    <div id="last-5-games">
+        {% if last_5_games_general %}
+            <table>
+                <thead>
+                    <tr>
+                        <th>Game</th>
+                        <th>Date</th>
+                        <th>Opponent</th>
+                        <th>Started</th>
+                        <th>Minutes</th>
+                        <th>Points</th>
+                        <th>Field Goal Percentage</th>
+                        <th>Three Point Percentage</th>
+                        <th>Free Throw Percentage</th>
+                        <th>Assists</th>
+                        <th>Rebounds</th>
+                        <th>Steals</th>
+                        <th>Blocks</th>
+                        <th>Turnovers</th>
+                        <th>Personal Fouls</th>
+                        <th>Plus Minus</th>
+                        <th>Game Score</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for game in last_5_games_general %}
+                        <tr>
+                            <td>{{ game.number }}</td>
+                            <td>{{ game.date }}</td>
+                            <td>{{ game.opponent }}</td>
+                            <td>{% if game.started %}*{% endif %}</td>
+                            <td>{{ game.minutes_played }}</td>
+                            <td>{{ game.points }}</td>
+                            <td>{{ game.field_goal_percentage }}</td>
+                            <td>{{ game.three_pointers_percentage }}</td>
+                            <td>{{ game.free_throw_percentage }}</td>
+                            <td>{{ game.assists }}</td>
+                            <td>{{ game.total_rebounds }}</td>
+                            <td>{{ game.steals }}</td>
+                            <td>{{ game.blocks }}</td>
+                            <td>{{ game.turnovers }}</td>
+                            <td>{{ game.personal_fouls }}</td>
+                            <td>{{ game.plus_minus }}</td>
+                            <td>{{ game.game_score }}</td>
+                        </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        {% else %}
+            <p>No games available.</p>
+        {% endif %}
+    </div>
+    
+    <h2 id="full-season-gamelog-heading">Full Season Game Log 2025 season {{current_team.abbreviation}}</h2>
+    <label for="season-dropdown">Select Season:</label>
+    <select id="season-dropdown" onchange="filterBySeason()">
+      <option>Select season</option>
+      {% for season in player_seasons %}
+          <option value="{{ season.year }}|{{ season.team.abbreviation }}" 
+              {% if season.year == selected_year and season.team.abbreviation == selected_team %}selected{% endif %}>
+              {{ season.year }} {{ season.team.abbreviation }}
+          </option>
+      {% endfor %}
+  </select>
+  
+
+    <h3>General Stats</h3>
+    <div id="full-season-table-gen-stats" >
+      <table>
+        <tr>
+          <th>Game</th>
+          <th>Date</th>
+          <th>Team</th>
+          <th>Opponent</th>
+          <th>Started</th>
+          <th>Minutes</th>
+          <th>Points</th>
+          <th>Field Goal Percentage</th>
+          <th>Three Point Percentage</th>
+          <th>Free Throw Percentage</th>
+          <th>Assists</th>
+          <th>Rebounds</th>
+          <th>Steals</th>
+          <th>Blocks</th>
+          <th>Turnovers</th>
+          <th>Personal Fouls</th>
+          <th>Plus Minus</th>
+          <th>Game Score</th>
+        </tr>
+        {% for game in full_season_general %}
+        <tr>
+          <td>{{game.number}}</td>
+          <td>{{ game.date }}</td>
+          <td>{{game.team}}</td>
+          <td>{{ game.opponent }}</td>
+          <td>{% if game.started %}*{% endif %}</td>
+          <td>{{ game.minutes_played }}</td>
+          <td>{{ game.points }}</td>
+          <td>{{ game.field_goal_percentage }}</td>
+          <td>{{ game.three_pointers_percentage }}</td>
+          <td>{{ game.free_throw_percentage }}</td>
+          <td>{{ game.assists }}</td>
+          <td>{{ game.total_rebounds }}</td>
+          <td>{{ game.steals }}</td>
+          <td>{{ game.blocks }}</td>
+          <td>{{ game.turnovers }}</td>
+          <td>{{ game.personal_fouls }}</td>
+          <td>{{ game.plus_minus}}</td>
+          <td>{{ game.game_score }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+    <h3>Advanced Stats</h3>
+    <div id="full-season-table-adv-stats" >
+      <table>
+        <tr>
+          <th>Game</th>
+          <th>Date</th>
+          <th>Team</th>
+          <th>Opponent</th>
+          <th>Started</th>
+          <th>Minutes</th>
+          <th>True Shoting Percentage</th>
+          <th>Assist Percentage</th>
+          <th>Effective Field Goal Percentage</th>
+          <th>Offensive Rebound Percentage</th>
+          <th>Defensive Rebound Percentage</th>
+          <th>Total Rebound Percentage</th>
+          <th>Steal Percentage</th>
+          <th>Block Percentage</th>
+          <th>Turnover Percentage</th>
+          <th>Usage Rate</th>
+          <th>Offensive Rating</th>
+          <th>Defensive Rating</th>
+    
+        </tr>
+        {% for game in full_season_advanced %}
+        <tr>
+          <td>{{game.number}}</td>
+          <td>{{ game.date }}</td>
+          <td>{{game.team}}</td>
+          <td>{{ game.opponent }}</td>
+          <td>{% if game.started %}*{% endif %}</td>
+          <td>{{ game.minutes_played }}</td>
+          <td>{{ game.true_shooting_percentage }}</td>
+          <td>{{ game.assist_percentage }}</td>
+          <td>{{ game.effective_field_goal_percentage }}</td>
+          <td>{{ game.offensive_rebound_percentage }}</td>
+          <td>{{ game.defensive_rebound_percentage }}</td>
+          <td>{{ game.total_rebound_percentage }}</td>
+          <td>{{ game.steal_percentage }}</td>
+          <td>{{ game.block_percentage }}</td>
+          <td>{{ game.turnover_percentage }}</td>
+          <td>{{ game.usage_rate }}</td>
+          <td>{{ game.offensive_rating}}</td>
+          <td>{{ game.defensive_rating }}</td>
+        </tr>
+        {% endfor %}
+      </table>
+
+    </div>
+
+  </body>
+</html>
