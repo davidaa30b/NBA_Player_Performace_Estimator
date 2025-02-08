@@ -185,27 +185,34 @@ def player_profile(request, team_id, player_id):
     })
 
 
-def predict_player_stats(request, player_id):
+def predict_player_stats(request, player_id,last_number_games):
     starts = request.GET.get('starts', 'false') == 'true'
     stats = {
-        "Points": get_player_stat_model(player_id,starts, Stats.POINTS),
-        "Assists": get_player_stat_model(player_id,starts, Stats.ASSISTS),
-        "Blocks": get_player_stat_model(player_id,starts, Stats.BLOCKS),
-        "Rebounds": get_player_stat_model(player_id,starts, Stats.REBOUNDS),
-        "Steals": get_player_stat_model(player_id,starts, Stats.STEALS),
-        "Game_Score": get_player_stat_model(player_id,starts, Stats.GAME_SCORE),
+        "Points": get_player_stat_model(player_id,starts,last_number_games, Stats.POINTS),
+        "Assists": get_player_stat_model(player_id,starts,last_number_games, Stats.ASSISTS),
+        "Blocks": get_player_stat_model(player_id,starts,last_number_games, Stats.BLOCKS),
+        "Rebounds": get_player_stat_model(player_id,starts,last_number_games, Stats.REBOUNDS),
+        "Steals": get_player_stat_model(player_id,starts,last_number_games, Stats.STEALS),
+        "Game_Score": get_player_stat_model(player_id,starts,last_number_games, Stats.GAME_SCORE),
     }
 
     return JsonResponse({'stats':stats})
 
 def player_estimator(request,team_id,player_id):
     player = get_object_or_404(Player, id=player_id)
-
+    total_games_played = 0
+    player_seasons_current_year = PlayerSeason.objects.prefetch_related(
+        'gamelogplayergeneralstats').filter(player=player,year=YEAR)
+    for player_season in player_seasons_current_year:
+        total_games_played += len(player_season.gamelogplayergeneralstats.all())
+    
     return render(request, 'player_estimator.html',{
         'player': player,
+        'total_games_played' : total_games_played,
+        'current_test_games': round(total_games_played * 0.8 )
     })
 
-def graph_tendency(request, player_id, stat):
+def graph_tendency(request, player_id, stat,test_size_percentage,last_number_games):
     match(stat):
         case "Points": 
             input = Stats.POINTS
@@ -219,6 +226,6 @@ def graph_tendency(request, player_id, stat):
             input = Stats.BLOCKS
         case "Game Score":
             input = Stats.GAME_SCORE
-    graph_player_stat(player_id,input)
+    graph_player_stat(player_id,input,test_size_percentage/100,last_number_games)
     return render(request, 'player_estimator.html')
 

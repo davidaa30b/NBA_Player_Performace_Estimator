@@ -3,6 +3,9 @@
   <head>
     <title>{{ player.name }} - Trend Estimator</title>
     <script>
+      let currentTestSizePercentage = 80;
+      let currentLastNumberOfGamesToTakeAverage = 5;
+
       function animateLoadingDots(elemenet_id, message) {
         let loadingText = document.getElementById(elemenet_id);
         let dotCount = 0;
@@ -13,14 +16,20 @@
           loadingText.innerHTML = `${message} ${".".repeat(dotCount)}`;
         }, 500);
       }
+
       function showTrend(stat) {
         const playerId = "{{ player.id }}";
-        let trendDiv = document.getElementById("trend-graph-data");
+        let trendDiv = document.getElementById("trend-graph-loader");
         trendDiv.innerHTML = "<h3 id='trend-graph-loading'></h3>";
         animateLoadingDots("trend-graph-loading", "Loading Trend Graph");
-        fetch(`/graph_tendency/${encodeURIComponent(playerId)}/${stat}/`, {
-          method: "GET",
-        })
+        fetch(
+          `/graph_tendency/${encodeURIComponent(
+            playerId
+          )}/${stat}/${currentTestSizePercentage}/${currentLastNumberOfGamesToTakeAverage}/`,
+          {
+            method: "GET",
+          }
+        )
           .then((response) => response.json())
           .then((data) => {})
           .catch((error) => {
@@ -30,9 +39,37 @@
             trendDiv.innerHTML = "";
           });
       }
+
+      function applyChanges() {
+        const total_games_played = "{{ total_games_played }}";
+        let testSizePercentage =
+          document.getElementById("test-size-input").value;
+
+        let lastNumberOfGamesAverage = document.getElementById(
+          "average-of-previous-number-games"
+        ).value;
+
+        if (testSizePercentage < 0 || testSizePercentage > 100) {
+          alert("Please enter a value between 0 and 100.");
+          return;
+        }
+
+        if (lastNumberOfGamesAverage < 3 || lastNumberOfGamesAverage > 20) {
+          alert("Please enter a value between 3 and 20.");
+          return;
+        }
+
+        currentLastNumberOfGamesToTakeAverage = lastNumberOfGamesAverage;
+        currentTestSizePercentage = testSizePercentage;
+        document.getElementById("number-games-test").value = Math.round(
+          (total_games_played * currentTestSizePercentage) / 100
+        );
+        alert(`Test size percentage updated to ${currentTestSizePercentage}`);
+      }
+
       function predictPlayerStats(starts) {
         const playerId = "{{ player.id }}";
-        const url = `/predict_stats/${playerId}/?starts=${starts}`;
+        const url = `/predict_stats/${playerId}/?starts=${starts}/${currentLastNumberOfGamesToTakeAverage}/`;
         let statsDiv = document.getElementById("predicted-stats");
         statsDiv.innerHTML = "<h3 id='loading-text-prediction'></h3>";
         animateLoadingDots("loading-text-prediction", "Loading Prediction");
@@ -66,16 +103,70 @@
     <h1>Player Trends - {{ player.name }}</h1>
     <img src="{{ player.image }}" alt="Player Image" />
     <h2>Predict Next Game Stats</h2>
+    <section>
+      <p>
+        Gives a prediction for the next game's general statistic for a player
+      </p>
+    </section>
     <button onclick="predictPlayerStats(true)">Predict as Starter</button>
     <button onclick="predictPlayerStats(false)">Predict as Bench</button>
 
     <div id="predicted-stats"></div>
     <h2>View Trend Graph</h2>
+    <section>
+      <p><strong>Disclaimer!!</strong> This only based on the current year!</p>
+      <p>
+        The trend graph is based on the predictions of the algorithm for a
+        certain stat
+      </p>
+      <p>
+        (Points,Assits,Rebounds,Steals,Blocks,Game Score) and the actual value
+        for the
+      </p>
+      <p>
+        stat from this year time period. This is done to check the prediction
+        accuracy.
+      </p>
+      <p>
+        Time period as well as other paramters can be change to seek
+        improvement.
+      </p>
+    </section>
     <button onclick="showTrend('Points')">Points Trend</button>
     <button onclick="showTrend('Assists')">Assists Trend</button>
     <button onclick="showTrend('Rebounds')">Rebounds Trend</button>
     <button onclick="showTrend('Steals')">Steals Trend</button>
     <button onclick="showTrend('Blocks')">Blocks Trend</button>
-    <div id="trend-graph-data"></div>
+    <div id="trend-graph-loader"></div>
+    <h2>Adjust Prediction Parameters</h2>
+
+    <div id="trend-graph-data">
+      <div>
+        <label for="test-size-input">Test Size Percentage:</label>
+        <input
+          type="number"
+          id="test-size-input"
+          value="80"
+          step="1"
+          min="1"
+          max="100"
+        />
+        <label for="number-games-test">Test Size Number of Games:</label>
+
+        <input
+          type="number"
+          id="number-games-test"
+          value="{{current_test_games}}"
+          disabled
+        />
+      </div>
+      <div>
+        <label for="average-of-previous-number-games"
+          >Number of Games to take of Average:</label
+        >
+        <input type="number" id="average-of-previous-number-games" value="5" />
+      </div>
+      <button onclick="applyChanges()">Apply Changes</button>
+    </div>
   </body>
 </html>

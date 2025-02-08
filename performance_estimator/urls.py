@@ -7,7 +7,7 @@ urlpatterns = [
     path('teams/<int:team_id>/', team_profile, name='team_profile'), 
     path('teams/<int:team_id>/<int:player_id>/', player_profile, name='player_profile'),
     path('teams/<int:team_id>/<int:player_id>/estimator', player_estimator, name='player_estimator'), 
-    path('predict_stats/<int:player_id>/', predict_player_stats, name='predict_player_stats'),  # Predict stats
-    path('graph_tendency/<int:player_id>/<str:stat>/', graph_tendency, name='graph_tendency'),
+    path('predict_stats/<int:player_id>/<int:last_number_games>/', predict_player_stats, name='predict_player_stats'),  # Predict stats
+    path('graph_tendency/<int:player_id>/<str:stat>/<int:test_size_percentage>/<int:last_number_games>/', graph_tendency, name='graph_tendency'),
 
 ]

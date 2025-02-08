@@ -4,78 +4,84 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from performance_estimator.constants import LAST_NUMBER_GAMES, TEAMS, Stats
-from performance_estimator.models import Player
+from performance_estimator.constants import LAST_NUMBER_GAMES, TEAMS, YEAR
+from performance_estimator.models import Player, PlayerSeason
 from performance_estimator.utils.model_loader import ModelLoader
 
 
 def get_weights(y_train):
     n = len(y_train)
-    weights = np.linspace(0.5, 10, n)  # Linearly increasing weights
+    weights = np.linspace(0.5, 10, n) 
     return weights
 
-def graph_player_stat(player_id,stat):
+def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games):
+    print("Test size percentage!!",test_size_percentage)
     player = Player.objects.get(id=player_id)
+    player_seasons = PlayerSeason.objects.prefetch_related(
+ 
+    ).filter(player=player)
 
-    model2023 = ModelLoader(player, 2023)
-    model2024 = ModelLoader(player, 2024)
-    model2025 = ModelLoader(player, 2025)
+    
+    seasons = {season.year for season in player_seasons if season.year<YEAR}
+    X_prev_train_data = []  
+    y_prev_train_data = []  
+    for season in seasons:
+        model = ModelLoader(player, season,last_number_games)
+        df_train_model = model.model_load_data(stat)
+        X, y = df_train_model.drop(columns=['date','target']), df_train_model['target']
+        X_prev_train_data.append(X)
+        y_prev_train_data.append(y)
 
-    df_train_model2023 = model2023.model_load_data(stat)
-    df_train_model2024 = model2024.model_load_data(stat)
-    df_train_model2025 = model2025.model_load_data(stat)
-    df_train_model2025 = df_train_model2025.sort_values(by='date', ascending=True)
+    model_today = ModelLoader(player, YEAR,last_number_games)
 
-    X2023, y2023 = df_train_model2023.drop(columns=['date','target']), df_train_model2023['target']
-    X2024, y2024 = df_train_model2024.drop(columns=['date','target']), df_train_model2024['target']
-    X2025, y2025 = df_train_model2025.drop(columns=['date','target']), df_train_model2025['target']
+  
+    df_train_model_today = model_today.model_load_data(stat)
+    df_train_model_today = df_train_model_today.sort_values(by='date', ascending=True)
 
-    X_full = pd.concat([X2023, X2024], ignore_index=True)
-    y_full = pd.concat([y2023, y2024], ignore_index=True)
 
-    X_train_2025, X_test_2025, y_train_2025, y_test_2025 = train_test_split(
-        X2025, y2025, test_size=0.8, shuffle=False
+    X_today, y_today = df_train_model_today.drop(columns=['date','target']), df_train_model_today['target']
+
+    X_train_today, X_test_today, y_train_today, y_test_today = train_test_split(
+        X_today, y_today, test_size=test_size_percentage, shuffle=False
     )
 
-
-    pd.set_option("display.max_rows", None)  # Show all rows
-    pd.set_option("display.max_columns", None)  # Show all columns
-    X_train = pd.concat([X_full, X_train_2025], ignore_index=True)
-    y_train = pd.concat([y_full, y_train_2025], ignore_index=True)
-
-    X_test = X_test_2025.reset_index(drop=True)
-    y_test = y_test_2025.reset_index(drop=True).values
+    X_test = X_test_today.reset_index(drop=True)
+    y_test = y_test_today.reset_index(drop=True).values
 
     predictions = []
-
-
 
     start_game = 0
     end_game = len(X_test)
 
-    game_dates_2025 = df_train_model2025["date"].values  
-    game_opponents_2025 = df_train_model2025["opponent"].values  
+    game_dates_2025 = df_train_model_today["date"].values  
+    game_opponents_2025 = df_train_model_today["opponent"].values  
 
-    test_game_dates = game_dates_2025[len(X_train_2025):]  
-    test_game_opponents = game_opponents_2025[len(X_train_2025):]  
+    test_game_dates = game_dates_2025[len(X_train_today):]  
+    test_game_opponents = game_opponents_2025[len(X_train_today):]  
 
-    # Generate x_labels for the specific range of games you're displaying
     x_labels = [f"{date} vs {TEAMS[opp]}" for date, opp in zip(test_game_dates[start_game:end_game], test_game_opponents[start_game:end_game])]
     
-    # Start progressive training loop
+
+    if X_prev_train_data:
+        X_prev_data = pd.concat(X_prev_train_data, ignore_index=True)
+        y_prev_data = pd.concat(y_prev_train_data, ignore_index=True)
+        
+        X_train = pd.concat([X_prev_data, X_train_today], ignore_index=True)
+        y_train = pd.concat([y_prev_data, y_train_today], ignore_index=True)
+    else:
+        X_train = X_train_today.copy()
+        y_train = y_train_today.copy()
+
     for i in range(len(X_test)):
         weights = get_weights(y_train)
 
-        # Train model
         model = RandomForestRegressor(random_state=42)
         model.fit(X_train, y_train, sample_weight=weights)
 
-        # Predict next game
         X_next = X_test.iloc[i:i+1]
         y_pred = model.predict(X_next)[0]
         predictions.append(y_pred)
 
-        # Add predicted game to training set
         X_train = pd.concat([X_train, X_next], ignore_index=True)
         y_train = pd.concat([y_train, pd.Series(y_test[i])], ignore_index=True)
 
@@ -99,9 +105,9 @@ def graph_player_stat(player_id,stat):
     plt.xticks(ticks=displayed_games, labels=x_labels, rotation=45, ha="right")
 
     # Labels and title
-    plt.xlabel('Game Number (2025 Season)')
+    plt.xlabel(f'Game Number ({YEAR} Season)')
     plt.ylabel(f'{stat}')
-    plt.title(f'{player.name}\nActual vs Predicted {stat} (Games {len(X_train_2025)+LAST_NUMBER_GAMES} - {len(X2025)+LAST_NUMBER_GAMES} of 2025)')
+    plt.title(f'{player.name}\nActual vs Predicted {stat} (Games {len(X_train_today)+LAST_NUMBER_GAMES} - {len(X_today)+LAST_NUMBER_GAMES} of {YEAR})')
 
     # Display error metrics
     plt.text(
