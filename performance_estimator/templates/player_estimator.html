@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>{{ player.name }} - Trend Estimator</title>
+    <script>
+      function animateLoadingDots(elemenet_id, message) {
+        let loadingText = document.getElementById(elemenet_id);
+        let dotCount = 0;
+        let maxDots = 3;
+
+        setInterval(() => {
+          dotCount = (dotCount % maxDots) + 1;
+          loadingText.innerHTML = `${message} ${".".repeat(dotCount)}`;
+        }, 500);
+      }
+      function showTrend(stat) {
+        const playerId = "{{ player.id }}";
+        let trendDiv = document.getElementById("trend-graph-data");
+        trendDiv.innerHTML = "<h3 id='trend-graph-loading'></h3>";
+        animateLoadingDots("trend-graph-loading", "Loading Trend Graph");
+        fetch(`/graph_tendency/${encodeURIComponent(playerId)}/${stat}/`, {
+          method: "GET",
+        })
+          .then((response) => response.json())
+          .then((data) => {})
+          .catch((error) => {
+            console.error("Error fetching trend:", error);
+          })
+          .finally(() => {
+            trendDiv.innerHTML = "";
+          });
+      }
+      function predictPlayerStats(starts) {
+        const playerId = "{{ player.id }}";
+        const url = `/predict_stats/${playerId}/?starts=${starts}`;
+        let statsDiv = document.getElementById("predicted-stats");
+        statsDiv.innerHTML = "<h3 id='loading-text-prediction'></h3>";
+        animateLoadingDots("loading-text-prediction", "Loading Prediction");
+
+        fetch(url)
+          .then((response) => response.json())
+          .then((data) => {
+            statsDiv.innerHTML = "<h3>Predicted Stats:</h3>";
+            statsDiv.innerHTML += `<p><strong>Date:</strong> ${
+              data.stats["Points"].date
+            }
+                      <strong>Location:</strong> ${
+                        data.stats["Points"].location ? "Home" : "Away"
+                      }
+                      <strong>Opponent:</strong> ${
+                        data.stats["Points"].opponent
+                      }</p>`;
+            for (let stat in data.stats) {
+              console.log(stat);
+              console.log(data.stats[stat]);
+              statsDiv.innerHTML += `<p><strong>${stat}:</strong> ${parseFloat(
+                data.stats[stat].prediction
+              ).toFixed(2)}</p>`;
+            }
+          })
+          .catch((error) => console.error("Error fetching stats:", error));
+      }
+    </script>
+  </head>
+  <body>
+    <h1>Player Trends - {{ player.name }}</h1>
+    <img src="{{ player.image }}" alt="Player Image" />
+    <h2>Predict Next Game Stats</h2>
+    <button onclick="predictPlayerStats(true)">Predict as Starter</button>
+    <button onclick="predictPlayerStats(false)">Predict as Bench</button>
+
+    <div id="predicted-stats"></div>
+    <h2>View Trend Graph</h2>
+    <button onclick="showTrend('Points')">Points Trend</button>
+    <button onclick="showTrend('Assists')">Assists Trend</button>
+    <button onclick="showTrend('Rebounds')">Rebounds Trend</button>
+    <button onclick="showTrend('Steals')">Steals Trend</button>
+    <button onclick="showTrend('Blocks')">Blocks Trend</button>
+    <div id="trend-graph-data"></div>
+  </body>
+</html>

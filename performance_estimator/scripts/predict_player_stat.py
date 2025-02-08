@@ -13,8 +13,8 @@ from performance_estimator.utils.model_loader import ModelLoader
 
 
 
-def get_player_stat_model(player_name:str,starts,stat:str = Stats.POINTS):
-    player = Player.objects.get(name=player_name)
+def get_player_stat_model(player_id:int,starts,stat:str = Stats.POINTS):
+    player = Player.objects.get(id=player_id)
     
     player_seasons = PlayerSeason.objects.prefetch_related(
  
@@ -25,13 +25,13 @@ def get_player_stat_model(player_name:str,starts,stat:str = Stats.POINTS):
     X_train_data = []  
     y_train_data = []  
     for season in seasons:
-        model = ModelLoader(player_name, season)
+        model = ModelLoader(player, season)
         df_train_model = model.model_load_data(stat)
         X, y = df_train_model.drop(columns=['date','target']), df_train_model['target']
         X_train_data.append(X)
         y_train_data.append(y)
 
-    model_today = ModelLoader(player_name, YEAR)
+    model_today = ModelLoader(player, YEAR)
     df_train_model_today = model_today.model_load_data(stat)
     X_today, y_today = df_train_model_today.drop(columns=['date','target']), df_train_model_today['target']
     
@@ -61,6 +61,6 @@ def get_player_stat_model(player_name:str,starts,stat:str = Stats.POINTS):
     })
 
     feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
-
+    print(player)
     print(stats)
     return stats    

@@ -4,7 +4,8 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from performance_estimator.constants import TEAMS, Stats
+from performance_estimator.constants import LAST_NUMBER_GAMES, TEAMS, Stats
+from performance_estimator.models import Player
 from performance_estimator.utils.model_loader import ModelLoader
 
 
@@ -13,14 +14,17 @@ def get_weights(y_train):
     weights = np.linspace(0.5, 10, n)  # Linearly increasing weights
     return weights
 
-def graph_player_stat(player_name,stat):
-    model2023 = ModelLoader(player_name, 2023)
-    model2024 = ModelLoader(player_name, 2024)
-    model2025 = ModelLoader(player_name, 2025)
+def graph_player_stat(player_id,stat):
+    player = Player.objects.get(id=player_id)
+
+    model2023 = ModelLoader(player, 2023)
+    model2024 = ModelLoader(player, 2024)
+    model2025 = ModelLoader(player, 2025)
 
     df_train_model2023 = model2023.model_load_data(stat)
     df_train_model2024 = model2024.model_load_data(stat)
     df_train_model2025 = model2025.model_load_data(stat)
+    df_train_model2025 = df_train_model2025.sort_values(by='date', ascending=True)
 
     X2023, y2023 = df_train_model2023.drop(columns=['date','target']), df_train_model2023['target']
     X2024, y2024 = df_train_model2024.drop(columns=['date','target']), df_train_model2024['target']
@@ -33,6 +37,9 @@ def graph_player_stat(player_name,stat):
         X2025, y2025, test_size=0.8, shuffle=False
     )
 
+
+    pd.set_option("display.max_rows", None)  # Show all rows
+    pd.set_option("display.max_columns", None)  # Show all columns
     X_train = pd.concat([X_full, X_train_2025], ignore_index=True)
     y_train = pd.concat([y_full, y_train_2025], ignore_index=True)
 
@@ -43,7 +50,6 @@ def graph_player_stat(player_name,stat):
 
 
 
-    # Ensure range is within valid limits
     start_game = 0
     end_game = len(X_test)
 
@@ -95,7 +101,7 @@ def graph_player_stat(player_name,stat):
     # Labels and title
     plt.xlabel('Game Number (2025 Season)')
     plt.ylabel(f'{stat}')
-    plt.title(f'{player_name}\nActual vs Predicted {stat} (Games {len(X_train_2025)} - {len(X_train_2025) + len(X_test_2025)} of 2025)')
+    plt.title(f'{player.name}\nActual vs Predicted {stat} (Games {len(X_train_2025)+LAST_NUMBER_GAMES} - {len(X2025)+LAST_NUMBER_GAMES} of 2025)')
 
     # Display error metrics
     plt.text(

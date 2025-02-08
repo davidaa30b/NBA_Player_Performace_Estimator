@@ -93,7 +93,6 @@ def get_player_games_log(team: Team,log_type=GENERAL_STATS):
     games_log_links = []
     for player_url, player_name in player_links:
         time.sleep(2) 
-        # print("player_url: ",player_url)
         base_url = player_url.replace('.html', '/')
         if log_type == GENERAL_STATS:
             transformed_url = f"{base_url}/gamelog/{YEAR}"

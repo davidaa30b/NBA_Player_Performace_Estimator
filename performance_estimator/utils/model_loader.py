@@ -38,21 +38,19 @@ def get_team_advanced_stats(team_abbr: str,input_season):
 class ModelLoader():
 
 
-    def __init__(self,player_name,input_season):
+    def __init__(self,player:Player,input_season:int):
         self.season = input_season
 
-        player = Player.objects.get(name=player_name)
         
         season_players = PlayerSeason.objects.prefetch_related(
         'gamelogplayergeneralstats',
         'gamelogplayeradvancedstats',
         ).filter(player=player, year=self.season)
-
+        print(season_players)
         self.player_general_stats = []
         self.player_advanced_stats = []
         self.team_general_stats = []
         self.team_advanced_stats = []
-        schedules = []
         self.player_games_count = 0
         self.team_games_count = 0
         self.season_players_count = season_players.count()
@@ -72,9 +70,11 @@ class ModelLoader():
 
             self.player_games_count = len(p_gen_stats)
             self.team_games_count = len(t_gen_stats)
-            schedules.append(team.teamschedule.filter(season=self.season))
+         
+            if team.abbreviation == player.current_team.abbreviation:
+                self.team_schedule = team.teamschedule.filter(season=self.season)
 
-        self.team_schedule = schedules[0]
+
         self.round_index_begin = 0
         self.round_index_end = LAST_NUMBER_GAMES
         self.datas_played = []
@@ -172,6 +172,7 @@ class ModelLoader():
         for index in range(0,self.season_players_count):
             for game in self.player_general_stats[index]:
                 self.datas_played.append(game.date)
+                self.opponent_names_log.append(game.opponent)
                 self.minutes_played_games.append(game.minutes_played)
                 self.games_started.append(game.started)
                 self.locations_games.append(game.location)
@@ -230,7 +231,6 @@ class ModelLoader():
                 self.team_blocks.append(game.team_blocks)
                 self.team_turnovers.append(game.team_turnovers)
                 self.team_personal_fouls.append(game.team_personal_fouls)
-                self.opponent_names_log.append(game.opponent)
                 self.opponent_field_goals.append(game.opponent_field_goals)
                 self.opponent_field_goals_attempted.append(game.opponent_field_goals_attempted)
                 self.opponent_field_goal_percentage.append(game.opponent_field_goal_percentage)
@@ -269,6 +269,8 @@ class ModelLoader():
                 self.team_defensive_free_throws_per_field_goal_attempt_percentage.append(game.defensive_free_throws_per_field_goal_attempt_percentage)
 
         data = initialize_data(LAST_NUMBER_GAMES)
+        if self.season == 2025:
+            print(self.opponent_names_log)
         for game in range(LAST_NUMBER_GAMES,self.player_games_count):
             data['date'].append(self.datas_played[game])
             data['rest_days_prior'].append((self.datas_played[game]-self.datas_played[game-1]).days)

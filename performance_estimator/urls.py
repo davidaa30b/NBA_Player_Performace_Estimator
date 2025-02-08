@@ -8,6 +8,6 @@ urlpatterns = [
     path('teams/<int:team_id>/<int:player_id>/', player_profile, name='player_profile'),
     path('teams/<int:team_id>/<int:player_id>/estimator', player_estimator, name='player_estimator'), 
     path('predict_stats/<int:player_id>/', predict_player_stats, name='predict_player_stats'),  # Predict stats
-    path('graph_tendency/<str:player_name>/<str:stat>/', graph_tendency, name='graph_tendency'),
+    path('graph_tendency/<int:player_id>/<str:stat>/', graph_tendency, name='graph_tendency'),
 
 ]

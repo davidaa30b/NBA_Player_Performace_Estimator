@@ -101,12 +101,9 @@ def team_profile(request, team_id):
 def player_profile(request, team_id, player_id):
     player = get_object_or_404(Player, id=player_id)
     
-    # Get all seasons the player has played in
     player_seasons = PlayerSeason.objects.filter(player=player).order_by('-year')
-    # Compute career averages by team & season
     career_averages_gen_stats = {}
     career_averages_adv_stats = {}
-
     for player_season in player_seasons:
         game_logs = GameLogPlayerGeneralStats.objects.filter(player=player_season,team=player_season.team.abbreviation)
         minutes_played = [log.minutes_played for log in game_logs]
@@ -190,22 +187,25 @@ def player_profile(request, team_id, player_id):
 
 def predict_player_stats(request, player_id):
     starts = request.GET.get('starts', 'false') == 'true'
-    season_player = get_object_or_404(PlayerSeason, id=player_id)
     stats = {
-        "Points": get_player_stat_model(season_player.player.name,starts, Stats.POINTS),
-        "Assists": get_player_stat_model(season_player.player.name,starts, Stats.ASSISTS),
-        "Blocks": get_player_stat_model(season_player.player.name,starts, Stats.BLOCKS),
-        "Rebounds": get_player_stat_model(season_player.player.name,starts, Stats.REBOUNDS),
-        "Steals": get_player_stat_model(season_player.player.name,starts, Stats.STEALS),
-        "Game_Score": get_player_stat_model(season_player.player.name,starts, Stats.GAME_SCORE),
+        "Points": get_player_stat_model(player_id,starts, Stats.POINTS),
+        "Assists": get_player_stat_model(player_id,starts, Stats.ASSISTS),
+        "Blocks": get_player_stat_model(player_id,starts, Stats.BLOCKS),
+        "Rebounds": get_player_stat_model(player_id,starts, Stats.REBOUNDS),
+        "Steals": get_player_stat_model(player_id,starts, Stats.STEALS),
+        "Game_Score": get_player_stat_model(player_id,starts, Stats.GAME_SCORE),
     }
 
     return JsonResponse({'stats':stats})
 
 def player_estimator(request,team_id,player_id):
-    pass
+    player = get_object_or_404(Player, id=player_id)
 
-def graph_tendency(request, player_name, stat):
+    return render(request, 'player_estimator.html',{
+        'player': player,
+    })
+
+def graph_tendency(request, player_id, stat):
     match(stat):
         case "Points": 
             input = Stats.POINTS
@@ -219,5 +219,6 @@ def graph_tendency(request, player_name, stat):
             input = Stats.BLOCKS
         case "Game Score":
             input = Stats.GAME_SCORE
-    graph_player_stat(player_name,input)
+    graph_player_stat(player_id,input)
+    return render(request, 'player_estimator.html')
 

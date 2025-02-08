@@ -3,16 +3,7 @@
   <head>
     <title>{{ player.name }} - Profile</title>
     <script>
-      function animateLoadingDots() {
-          let loadingText = document.getElementById("loading-text");
-          let dotCount = 0;
-          let maxDots = 3;
-          
-          setInterval(() => {
-              dotCount = (dotCount % maxDots) + 1; // This will loop between 1 and 3
-              loadingText.innerHTML = `Loading ${'.'.repeat(dotCount)}`;
-          }, 500);  // Update every 500ms
-      }
+      
 
       function filterBySeason() {
         var dropdown = document.getElementById("season-dropdown");
@@ -32,39 +23,13 @@
             document.getElementById('full-season-gamelog-heading').innerText = `Full Season Game Log ${season} season ${team}`;
         }
     });
-    function predictPlayerStats(starts) {
-            const playerId = "{{ player.id }}";  
-            const url = `/predict_stats/${playerId}/?starts=${starts}`;
-            let statsDiv = document.getElementById("predicted-stats");
-            statsDiv.innerHTML = "<h3 id='loading-text'>Loading ...</h3>";
-            animateLoadingDots();
 
-            fetch(url)
-                .then(response => response.json())
-                .then(data => {
-                    statsDiv.innerHTML = "<h3>Predicted Stats:</h3>";
-                    statsDiv.innerHTML += `<p><strong>Date:</strong> ${data.stats['Points'].date}
-                      <strong>Location:</strong> ${data.stats['Points'].location ? 'Home' : 'Away'}
-                      <strong>Opponent:</strong> ${data.stats['Points'].opponent}</p>`;
-                    for (let stat in data.stats) {
-                        console.log(stat)
-                        console.log(data.stats[stat])
-                        statsDiv.innerHTML += `<p><strong>${stat}:</strong> ${parseFloat(data.stats[stat].prediction).toFixed(2)}</p>`;
-                    }
-                })
-                .catch(error => console.error("Error fetching stats:", error));
-        }
     </script>
   </head>
   <body>
     <h1>Player Profile - {{ player.name }}</h1>
     <img src="{{ player.image }}" alt="Player Image" />
-    <h2>Predict Next Game Stats</h2>
-    <button onclick="predictPlayerStats(true)">Predict as Starter</button>
-    <button onclick="predictPlayerStats(false)">Predict as Bench</button>
-
-    <div id="predicted-stats"></div> 
-    <p>Want to estimate player stats for other games or seasons? <a href="{% url 'player_estimator' team_id=team.id player_id=player.id %}">Go to Player Estimator</a></p>
+    
 
     <h2>Next 5 Games</h2>
     <table>
@@ -81,6 +46,9 @@
       </tr>
       {% endfor %}
     </table>
+    
+    <p>Check player through past games and seasons: <a href="{% url 'player_estimator' team_id=current_team.id player_id=player.id %}">Go to Player Estimator</a></p>
+
     <h2>Season Averages</h2>
     <h3>General Stats</h3>
     <table>
