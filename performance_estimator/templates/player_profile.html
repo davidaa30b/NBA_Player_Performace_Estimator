@@ -27,6 +27,11 @@
     </script>
   </head>
   <body>
+    <div class="navbar">
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'team_profile' team_id=current_team.id %}">Team</a>
+
+    </div>
     <h1>Player Profile - {{ player.name }}</h1>
     <img src="{{ player.image }}" alt="Player Image" />
     

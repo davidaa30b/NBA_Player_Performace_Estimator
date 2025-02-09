@@ -4,18 +4,13 @@ import pandas as pd
 from sklearn.ensemble import RandomForestRegressor
 from sklearn.metrics import mean_squared_error
 from sklearn.model_selection import train_test_split
-from performance_estimator.constants import LAST_NUMBER_GAMES, TEAMS, YEAR
+from performance_estimator.constants import TEAMS, YEAR
 from performance_estimator.models import Player, PlayerSeason
+from performance_estimator.utils.data_trainer import data_cleasing,get_weights
 from performance_estimator.utils.model_loader import ModelLoader
 
 
-def get_weights(y_train):
-    n = len(y_train)
-    weights = np.linspace(0.5, 10, n) 
-    return weights
-
-def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games):
-    print("Test size percentage!!",test_size_percentage)
+def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold):
     player = Player.objects.get(id=player_id)
     player_seasons = PlayerSeason.objects.prefetch_related(
  
@@ -61,7 +56,6 @@ def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games)
 
     x_labels = [f"{date} vs {TEAMS[opp]}" for date, opp in zip(test_game_dates[start_game:end_game], test_game_opponents[start_game:end_game])]
     
-
     if X_prev_train_data:
         X_prev_data = pd.concat(X_prev_train_data, ignore_index=True)
         y_prev_data = pd.concat(y_prev_train_data, ignore_index=True)
@@ -72,44 +66,40 @@ def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games)
         X_train = X_train_today.copy()
         y_train = y_train_today.copy()
 
-    for i in range(len(X_test)):
+
+    model, X_train_cleaned, X_test_cleaned = data_cleasing(X_train, y_train, X_test,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold)
+
+    for i in range(len(X_test_cleaned)):
         weights = get_weights(y_train)
 
-        model = RandomForestRegressor(random_state=42)
-        model.fit(X_train, y_train, sample_weight=weights)
+        model.fit(X_train_cleaned, y_train, sample_weight=weights)
 
-        X_next = X_test.iloc[i:i+1]
+        X_next = X_test_cleaned.iloc[i:i+1]
         y_pred = model.predict(X_next)[0]
         predictions.append(y_pred)
 
-        X_train = pd.concat([X_train, X_next], ignore_index=True)
+        X_train_cleaned = pd.concat([X_train_cleaned, X_next], ignore_index=True)
         y_train = pd.concat([y_train, pd.Series(y_test[i])], ignore_index=True)
 
-    # Select only the specified range for display
     displayed_games = range(start_game, end_game)
     actual_values_display = y_test[start_game:end_game]
     predictions_display = predictions[start_game:end_game]
 
-    # Error calculation
     mse = mean_squared_error(actual_values_display, predictions_display)
     rmse = np.sqrt(mse)
     error_percentages = np.abs((np.array(predictions_display) - actual_values_display) / actual_values_display) * 100
     min_error, max_error, avg_error = np.nanmin(error_percentages), np.nanmax(error_percentages), np.nanmean(error_percentages)
 
-    # Plot actual vs predicted points
     plt.figure(figsize=(10, 6))
     plt.plot(displayed_games, actual_values_display, label='Actual Points', marker='o', color='blue')
     plt.plot(displayed_games, predictions_display, label='Predicted Points', marker='x', color='red')
     
-    # Set custom x-ticks with game dates and opponents
     plt.xticks(ticks=displayed_games, labels=x_labels, rotation=45, ha="right")
 
-    # Labels and title
     plt.xlabel(f'Game Number ({YEAR} Season)')
     plt.ylabel(f'{stat}')
-    plt.title(f'{player.name}\nActual vs Predicted {stat} (Games {len(X_train_today)+LAST_NUMBER_GAMES} - {len(X_today)+LAST_NUMBER_GAMES} of {YEAR})')
+    plt.title(f'{player.name}\nActual vs Predicted {stat} (Games {len(X_train_today)+last_number_games} - {len(X_today)+last_number_games} of {YEAR})')
 
-    # Display error metrics
     plt.text(
         1.01, 0, 
         f'MSE: {mse:.2f}\nRMSE: {rmse:.2f}\n\nMin Error: {min_error:.2f}%\nMax Error: {max_error:.2f}%\nAvg Error: {avg_error:.2f}%', 
@@ -121,5 +111,4 @@ def graph_player_stat(player_id:int,stat,test_size_percentage,last_number_games)
     plt.legend()
     plt.grid(True)
 
-    # Show plot
     plt.show()

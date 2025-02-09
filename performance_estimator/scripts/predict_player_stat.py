@@ -7,12 +7,13 @@ from sklearn.ensemble import RandomForestRegressor
 
 from performance_estimator.models import Player, PlayerSeason,Team
 from performance_estimator.constants import YEAR,Stats
+from performance_estimator.utils.data_trainer import data_cleasing, get_weights
 from performance_estimator.utils.model_loader import ModelLoader
 
 
 
 
-def get_player_stat_model(player_id:int,starts,last_number_games:int,stat:str = Stats.POINTS):
+def get_player_stat_model(player_id:int,starts,last_number_games:int,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold,stat:str = Stats.POINTS):
     player = Player.objects.get(id=player_id)
     
     player_seasons = PlayerSeason.objects.prefetch_related(
@@ -42,23 +43,22 @@ def get_player_stat_model(player_id:int,starts,last_number_games:int,stat:str = 
 
     df_test_model,date,location,oppponent_full_name = model_today.model_loader_predict_data(starts)
 
-    model = RandomForestRegressor(random_state=42)
-    model.fit(X_train, y_train)
-    df_test_model = df_test_model.drop(columns=['date','target'], errors='ignore')  
-    prediction = model.predict(df_test_model)
+    model, cleasened_X_train,cleasened_test_model = data_cleasing(X_train,y_train,df_test_model,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold)
+    weights = get_weights(y_train)
+
+    model.fit(cleasened_X_train, y_train,sample_weight=weights)
+
+    cleasened_test_model = cleasened_test_model.drop(columns=['date','target'], errors='ignore')  
+    prediction = model.predict(cleasened_test_model)
     stats = {
             'prediction': prediction[0],
             'date': date,
             'location': location,
             'opponent': oppponent_full_name
         }
+    tree_depths = [tree.get_depth() for tree in model.estimators_]
+    min_depth = np.min(tree_depths)
+    max_depth = np.max(tree_depths)
+    print(f"Min Depth: {min_depth}, Max Depth: {max_depth}")
     
-    importances = model.feature_importances_
-    feature_importance_df = pd.DataFrame({
-        'Feature': X_train.columns,
-        'Importance': importances
-    })
-
-    feature_importance_df = feature_importance_df.sort_values(by='Importance', ascending=False)
- 
     return stats    

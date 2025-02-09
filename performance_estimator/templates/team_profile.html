@@ -23,6 +23,9 @@
     </script>
   </head>
   <body>
+    <div class="navbar">
+      <a href="{% url 'home' %}">Home</a>
+    </div>
     <h1>{{ team.name }}</h1>
     <img src="{{ team.image }}" alt="Team Image" />
     <h2>Roster</h2>

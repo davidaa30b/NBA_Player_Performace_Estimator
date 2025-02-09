@@ -5,6 +5,13 @@
     <script>
       let currentTestSizePercentage = 80;
       let currentLastNumberOfGamesToTakeAverage = 5;
+      let currentNumberTreesForest = 100;
+      let currentMaxDepthTree = 21;
+      let currentMinNumberSamplesSplitNode = 2;
+      let currentMinNumberLeafNode = 1;
+      let curretnCriterion = "squared_error";
+      let currentVarianceThreshhold = 10;
+      let currentCorrelatonThreshold = 90;
 
       function animateLoadingDots(elemenet_id, message) {
         let loadingText = document.getElementById(elemenet_id);
@@ -25,7 +32,7 @@
         fetch(
           `/graph_tendency/${encodeURIComponent(
             playerId
-          )}/${stat}/${currentTestSizePercentage}/${currentLastNumberOfGamesToTakeAverage}/`,
+          )}/${stat}/${currentTestSizePercentage}/${currentLastNumberOfGamesToTakeAverage}/${currentNumberTreesForest}/${currentMaxDepthTree}/${currentMinNumberSamplesSplitNode}/${currentMinNumberLeafNode}/${curretnCriterion}/${currentVarianceThreshhold}/${currentCorrelatonThreshold}/`,
           {
             method: "GET",
           }
@@ -48,6 +55,20 @@
         let lastNumberOfGamesAverage = document.getElementById(
           "average-of-previous-number-games"
         ).value;
+        let lastNumberOfTressForest = document.getElementById(
+          "number-of-trees-forest"
+        ).value;
+        let lastMaxDepthTree = document.getElementById("max-depth-tree").value;
+        let lastMinSamplesSplit =
+          document.getElementById("min-samples-split").value;
+        let lastMinSamplesLeaf =
+          document.getElementById("min-samples-leaf").value;
+        let lastCriterion = document.getElementById("criterion").value;
+        let lastVarianceThreshold =
+          document.getElementById("variance_threshold").value;
+        let lastCorrelationThreshold = document.getElementById(
+          "correlation_threshold"
+        ).value;
 
         if (testSizePercentage < 0 || testSizePercentage > 100) {
           alert("Please enter a value between 0 and 100.");
@@ -64,12 +85,20 @@
         document.getElementById("number-games-test").value = Math.round(
           (total_games_played * currentTestSizePercentage) / 100
         );
-        alert(`Test size percentage updated to ${currentTestSizePercentage}`);
+        currentNumberTreesForest = lastNumberOfTressForest;
+        currentMaxDepthTree = lastMaxDepthTree;
+        currentMinNumberSamplesSplitNode = lastMinSamplesSplit;
+        currentMinNumberLeafNode = lastMinSamplesLeaf;
+        curretnCriterion = lastCriterion;
+        currentVarianceThreshhold = lastVarianceThreshold;
+        currentCorrelatonThreshold = lastCorrelationThreshold;
+        alert("Changes Applied");
       }
 
       function predictPlayerStats(starts) {
         const playerId = "{{ player.id }}";
-        const url = `/predict_stats/${playerId}/?starts=${starts}/${currentLastNumberOfGamesToTakeAverage}/`;
+        const url = `/predict_stats/${playerId}/${currentLastNumberOfGamesToTakeAverage}/${currentNumberTreesForest}/${currentMaxDepthTree}/${currentMinNumberSamplesSplitNode}/${currentMinNumberLeafNode}/${curretnCriterion}/${currentVarianceThreshhold}/${currentCorrelatonThreshold}/?starts=${starts}/`;
+
         let statsDiv = document.getElementById("predicted-stats");
         statsDiv.innerHTML = "<h3 id='loading-text-prediction'></h3>";
         animateLoadingDots("loading-text-prediction", "Loading Prediction");
@@ -100,6 +129,14 @@
     </script>
   </head>
   <body>
+    <div class="navbar">
+      <a href="{% url 'home' %}">Home</a>
+      <a href="{% url 'team_profile' team_id=player.current_team.id %}">Team</a>
+      <a
+        href="{% url 'player_profile' team_id=player.current_team.id player_id=player.id %}"
+        >Player</a
+      >
+    </div>
     <h1>Player Trends - {{ player.name }}</h1>
     <img src="{{ player.image }}" alt="Player Image" />
     <h2>Predict Next Game Stats</h2>
@@ -165,6 +202,61 @@
           >Number of Games to take of Average:</label
         >
         <input type="number" id="average-of-previous-number-games" value="5" />
+      </div>
+      <div>
+        <label for="number-of-trees-forest"
+          >Number of Trees in the forest:</label
+        >
+        <input type="number" id="number-of-trees-forest" value="100" />
+      </div>
+      <div>
+        <label for="max-depth-tree">Max depth for Tree</label>
+        <input type="number" id="max-depth-tree" value="21" />
+      </div>
+      <div>
+        <label for="min-samples-split"
+          >Minimum number of samples to split Node</label
+        >
+        <input type="number" id="min-samples-split" value="2" />
+      </div>
+      <div>
+        <label for="min-samples-leaf"
+          >Minimum number of samples to be Leaf Node</label
+        >
+        <input type="number" id="min-samples-leaf" value="1" />
+      </div>
+      <div>
+        <label for="criterion">Choose Criterion:</label>
+        <select id="criterion" name="criterion">
+          <option value="squared_error" selected>Square Error</option>
+          <option value="absolute_error">Absolute Error</option>
+          <option value="friedman_mse">Friedman MSE</option>
+          <option value="poisson">Poisson</option>
+        </select>
+      </div>
+      <div>
+        <label for="variance_threshold">Minimum Variance Threshold:</label>
+        <input
+          type="number"
+          id="variance_threshold"
+          name="variance_threshold"
+          min="1"
+          max="100"
+          step="1"
+          value="10"
+        />
+      </div>
+      <div>
+        <label for="correlation_threshold">Correlation Threshold:</label>
+        <input
+          type="number"
+          id="correlation_threshold"
+          name="correlation_threshold"
+          min="1"
+          max="100"
+          step="1"
+          value="90"
+        />
       </div>
       <button onclick="applyChanges()">Apply Changes</button>
     </div>

@@ -185,15 +185,15 @@ def player_profile(request, team_id, player_id):
     })
 
 
-def predict_player_stats(request, player_id,last_number_games):
+def predict_player_stats(request, player_id,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold):
     starts = request.GET.get('starts', 'false') == 'true'
     stats = {
-        "Points": get_player_stat_model(player_id,starts,last_number_games, Stats.POINTS),
-        "Assists": get_player_stat_model(player_id,starts,last_number_games, Stats.ASSISTS),
-        "Blocks": get_player_stat_model(player_id,starts,last_number_games, Stats.BLOCKS),
-        "Rebounds": get_player_stat_model(player_id,starts,last_number_games, Stats.REBOUNDS),
-        "Steals": get_player_stat_model(player_id,starts,last_number_games, Stats.STEALS),
-        "Game_Score": get_player_stat_model(player_id,starts,last_number_games, Stats.GAME_SCORE),
+        "Points": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.POINTS),
+        "Assists": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.ASSISTS),
+        "Blocks": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.BLOCKS),
+        "Rebounds": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.REBOUNDS),
+        "Steals": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.STEALS),
+        "Game_Score": get_player_stat_model(player_id,starts,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100, Stats.GAME_SCORE),
     }
 
     return JsonResponse({'stats':stats})
@@ -212,7 +212,7 @@ def player_estimator(request,team_id,player_id):
         'current_test_games': round(total_games_played * 0.8 )
     })
 
-def graph_tendency(request, player_id, stat,test_size_percentage,last_number_games):
+def graph_tendency(request, player_id, stat,test_size_percentage,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold):
     match(stat):
         case "Points": 
             input = Stats.POINTS
@@ -226,6 +226,6 @@ def graph_tendency(request, player_id, stat,test_size_percentage,last_number_gam
             input = Stats.BLOCKS
         case "Game Score":
             input = Stats.GAME_SCORE
-    graph_player_stat(player_id,input,test_size_percentage/100,last_number_games)
+    graph_player_stat(player_id,input,test_size_percentage/100,last_number_games,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold/100,correlation_threshold/100)
     return render(request, 'player_estimator.html')
 
