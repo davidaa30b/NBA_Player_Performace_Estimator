@@ -2,6 +2,127 @@
 <html>
   <head>
     <title>{{ player.name }} - Trend Estimator</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        color: #333;
+        margin: 0;
+        padding: 0;
+        text-align: center;
+      }
+
+      .navbar {
+        background-color: #1e3a8a;
+        padding: 15px;
+        display: flex;
+        justify-content: center;
+        gap: 20px;
+      }
+
+      .navbar a {
+        color: white;
+        text-decoration: none;
+        font-size: 18px;
+        padding: 10px 15px;
+        transition: background 0.3s ease;
+      }
+
+      .navbar a:hover {
+        background-color: #3748a1;
+        border-radius: 5px;
+      }
+
+      h1,
+      h2 {
+        color: #1e3a8a;
+      }
+
+      img {
+        width: 150px;
+        border-radius: 10px;
+        margin: 10px 0;
+      }
+
+      section {
+        background: white;
+        padding: 15px;
+        margin: 20px auto;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      button {
+        background-color: #2563eb;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        font-size: 16px;
+        margin: 10px;
+        border-radius: 5px;
+        cursor: pointer;
+        transition: background 0.3s ease;
+      }
+
+      button:hover {
+        background-color: #1d4ed8;
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 8px;
+        margin-top: 5px;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+      }
+
+      #trend-graph-data {
+        background: white;
+        padding: 15px;
+        margin: 20px auto;
+        width: 80%;
+        max-width: 600px;
+        border-radius: 10px;
+        box-shadow: 0px 4px 8px rgba(0, 0, 0, 0.1);
+      }
+
+      #trend-graph-data div {
+        margin: 10px 0;
+      }
+
+      label {
+        font-weight: bold;
+        display: block;
+      }
+
+      #loading-text-prediction,
+      #trend-graph-loading {
+        font-weight: bold;
+        color: #e11d48;
+      }
+
+      #trend-graph-loader {
+        margin-top: 20px;
+      }
+
+      @media (max-width: 600px) {
+        section,
+        #trend-graph-data {
+          width: 95%;
+        }
+
+        .navbar {
+          flex-direction: column;
+        }
+
+        .navbar a {
+          padding: 10px;
+        }
+      }
+    </style>
     <script>
       let currentTestSizePercentage = 80;
       let currentLastNumberOfGamesToTakeAverage = 5;
@@ -74,7 +195,14 @@
           alert("Please enter a value between 0 and 100.");
           return;
         }
-
+        if (lastVarianceThreshold < 0 || lastVarianceThreshold > 100) {
+          alert("Please enter a value between 0 and 100.");
+          return;
+        }
+        if (lastCorrelationThreshold < 0 || lastCorrelationThreshold > 100) {
+          alert("Please enter a value between 0 and 100.");
+          return;
+        }
         if (lastNumberOfGamesAverage < 3 || lastNumberOfGamesAverage > 20) {
           alert("Please enter a value between 3 and 20.");
           return;

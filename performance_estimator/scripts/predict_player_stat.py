@@ -6,7 +6,7 @@ from performance_estimator.utils.data_trainer import data_cleasing, get_weights
 from performance_estimator.utils.model_loader import ModelLoader
 from performance_estimator.utils.prepare_data_for_prediction import get_player_seasons
 
-def get_player_stat_model(player_id:int,starts,last_number_games:int,n_trees_forest,max_depth_tree,min_samples_split,min_samples_leaf,criterion,variance_threshold,correlation_threshold,stat:str = Stats.POINTS):
+def get_player_stat_model(player_id:int,starts,last_number_games:int = 5,n_trees_forest = 100,max_depth_tree =21,min_samples_split = 2,min_samples_leaf = 1,criterion='square_error',variance_threshold = 0.1,correlation_threshold = 0.9,stat:str = Stats.POINTS):
     player, seasons = get_player_seasons(player_id)
 
     X_train_data, y_train_data = prepare_data_from_before_today(seasons,player,stat,last_number_games)

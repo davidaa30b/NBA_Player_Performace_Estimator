@@ -635,15 +635,19 @@ class TestDataProcessing(TestCase):
         X_test_today = np.array([1, 2, 3])
         last_number_games = 0
 
-        # Call the function
         plot_results(player, stat, X_test, y_test, X_train_today, X_test_today, test_game_dates, test_game_opponents, last_number_games, predictions)
 
-        # Check that plot functions were called
         mock_plot.assert_called()
         mock_xticks.assert_called()
         mock_xlabel.assert_called_with(f'Game Number ({YEAR} Season)')
         mock_ylabel.assert_called_with(f'{stat}')
         mock_title.assert_called()
         mock_text.assert_called()
+
+    
+
+
+
+
 
 
