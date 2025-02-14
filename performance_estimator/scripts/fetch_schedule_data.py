@@ -26,7 +26,7 @@ def fetch_schedule_for_team(team_abbr):
                 properties[hi]: (datetime.strptime(cols[ci], '%a, %b %d, %Y').strftime('%Y-%m-%d') if ci == 0 else cols[ci])
                 for hi, ci in zip(range(len(properties)), desired_indexes)
             }
-            game_data['location'] =  game_data['location'] != '@' #True if Home
+            game_data['location'] =  game_data['location'] != '@'
 
             existing_game_data = TeamSchedule.objects.filter(team=team, date=game_data['date']).first()
 

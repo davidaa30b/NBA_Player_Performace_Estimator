@@ -36,8 +36,6 @@ def get_team_advanced_stats(team_abbr: str,input_season):
         return stats
 
 class ModelLoader():
-
-
     def __init__(self,player:Player,input_season:int,last_number_games):
         self.season = input_season
         self.last_number_games=last_number_games
@@ -46,7 +44,6 @@ class ModelLoader():
         'gamelogplayergeneralstats',
         'gamelogplayeradvancedstats',
         ).filter(player=player, year=self.season)
-        print(season_players)
         self.player_general_stats = []
         self.player_advanced_stats = []
         self.team_general_stats = []
@@ -270,8 +267,7 @@ class ModelLoader():
         
         
         data = initialize_data( self.last_number_games) 
-        if self.season == 2025:
-            print(self.opponent_names_log)
+    
         for game in range( self.last_number_games,self.player_games_count):
             data['date'].append(self.datas_played[game])
             data['rest_days_prior'].append((self.datas_played[game]-self.datas_played[game-1]).days)
@@ -407,24 +403,15 @@ class ModelLoader():
             self.round_index_begin+=1
             self.round_index_end+=1
 
-
-        # pd.set_option('display.max_columns', None)  
-        # pd.set_option('display.max_rows', None)    
-        # print(pd.DataFrame(data))
-
-        
         return pd.DataFrame(data)
     def model_loader_predict_data(self,starts):
 
         to_be_predicted = initialize_data(self.last_number_games)
-        # print(self.team_games_count)
-        # print(self.player_games_count)
-        # print(len(self.team_schedule))
+    
         date = self.team_schedule[self.team_games_count:][0].date
         location = self.team_schedule[self.team_games_count:][0].location
         oppponent_full_name = self.team_schedule[self.team_games_count:][0].opponent
 
-        # print(f'Date : {date}\n Location : {"Home" if location else "Away"}\n Position : {"Starter" if starts else "Bench"}\n Opponent : {oppponent_full_name}')
         to_be_predicted['date'].append(date)
         to_be_predicted['rest_days_prior'].append((date - self.datas_played[self.player_games_count-1]).days)
         to_be_predicted['location'].append(location)

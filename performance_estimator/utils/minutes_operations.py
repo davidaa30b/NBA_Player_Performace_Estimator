@@ -24,10 +24,8 @@ def minutes_to_average_print(times):
         return '00:00'
 
 def time_to_minutes(time_str):
-    # Split the string into minutes and seconds
     minutes, seconds = map(int, time_str.split(":"))
     
-    # Convert to minutes as a decimal (seconds divided by 60)
     total_minutes = minutes + seconds / 60
     
     return total_minutes

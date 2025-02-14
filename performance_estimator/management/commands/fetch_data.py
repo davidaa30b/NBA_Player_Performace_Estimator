@@ -11,6 +11,7 @@ class Command(BaseCommand):
     help = 'Fetches and saves basketball data from Basketball Reference'
 
     def handle(self, *args, **kwargs):
+
         for index, team_abbr in enumerate(TEAMS):
             try:
                 team = Team.objects.get(abbreviation=team_abbr)
@@ -25,6 +26,6 @@ class Command(BaseCommand):
             # get_team_games_log(team,GENERAL_STATS)
             # get_team_games_log(team,ADVANCED_STATS)
             # fetch_schedule_for_team(team_abbr)
-            get_pictures_team_roster(team)
+            # get_pictures_team_roster(team)
             
         self.stdout.write(self.style.SUCCESS('Successfully fetched and saved basketball data.'))

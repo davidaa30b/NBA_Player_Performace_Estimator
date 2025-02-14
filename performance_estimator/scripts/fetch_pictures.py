@@ -4,7 +4,6 @@ from bs4 import BeautifulSoup
 from performance_estimator.constants import BROWSER_HEADERS, SITE_LINK, YEAR
 from performance_estimator.models import Player, Team
 
-
 def get_picture_team(team: Team):
     team_name = team.abbreviation
     team_url = f"{SITE_LINK}/teams/{team_name}/{YEAR}.html"
@@ -22,13 +21,6 @@ def get_picture_team(team: Team):
                 print(f'Image already fetched for {team_name}')
         else:
             print(f'Image not found for {team_name}')
-
-import time
-import requests
-from bs4 import BeautifulSoup
-from performance_estimator.constants import BROWSER_HEADERS, SITE_LINK, YEAR
-from performance_estimator.models import Player, Team
-
 
 def get_player_picture(player_url, player_name):
     response = requests.get(player_url, headers=BROWSER_HEADERS)
@@ -48,7 +40,6 @@ def get_player_picture(player_url, player_name):
 
     print(f"Could not find picture for {player_name}")
     return None
-
 
 def get_pictures_team_roster(team: Team):
     team_name: str = team.abbreviation
